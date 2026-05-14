@@ -1,0 +1,46 @@
+# Normalize line endings to LF for all text files
+* text=auto
+
+# Unity asset serialization (YAML files)
+*.unity text eol=lf
+*.prefab text eol=lf
+*.asset text eol=lf
+*.meta text eol=lf
+*.mat text eol=lf
+*.anim text eol=lf
+*.controller text eol=lf
+*.overrideController text eol=lf
+*.mask text eol=lf
+*.renderTexture text eol=lf
+*.spriteatlas text eol=lf
+*.playable text eol=lf
+*.physicMaterial text eol=lf
+*.signalGraph text eol=lf
+*.timeline text eol=lf
+
+# Source code
+*.cs text eol=lf
+*.shader text eol=lf
+*.cginc text eol=lf
+*.hlsl text eol=lf
+
+# Binary files (these should not be modified by Git)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.tga binary
+*.exr binary
+*.psd binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.aiff binary
+*.fbx binary
+*.blend binary
+*.unitypackage binary
+*.ttf binary
+*.otf binary
+*.dll binary
+*.exe binary

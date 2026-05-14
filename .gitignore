@@ -1,0 +1,72 @@
+# This .gitignore is tailored for Unity projects.
+# Common Unity artifacts are excluded to keep the repository clean.
+
+# ============ #
+# Unity generated
+# ============ #
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+
+# ============ #
+# Asset meta data (only .meta files should be tracked)
+# ============ #
+# But we track .meta files, so don't ignore them
+# !*.meta
+
+# ============ #
+# Visual Studio / Rider / .NET
+# ============ #
+.vs/
+*.csproj
+*.sln
+*.user
+*.suo
+*.userprefs
+*.unityproj
+*.pidb
+*.booproj
+*.cacheproject
+*.orig
+*.log
+*.tmp
+*.old
+*.pidb.meta
+*.pdb
+
+# ============ #
+# OS
+# ============ #
+.DS_Store
+Thumbs.db
+
+# ============ #
+# JetBrains Rider
+# ============ #
+.idea/
+*.sln.iml
+
+# ============ #
+# VS Code
+# ============ #
+.vscode/
+
+# ============ #
+# Crash / backup
+# ============ #
+*_Backup/
+*_Recovery/
+
+# ============ #
+# Gradle / Android
+# ============ #
+gradle/
+local.properties
+*.apk
+*.aab
+*.keystore
