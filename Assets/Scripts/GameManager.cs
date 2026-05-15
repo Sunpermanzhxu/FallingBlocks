@@ -16,7 +16,6 @@ public class GameManager : MonoBehaviour
     public Tilemap tilemap;            // Assign in Inspector
     public TileBase[] tetrominoTiles; // Your tile assets for different pieces
     public Vector2Int tileOffset = new Vector2Int(0, 0); // Adjust as needed for tile placement
-    private int recordedCrackColumn = -1; // Store the last crack column for reference
 
     [Header("Guide Blocks System")]
     public GuideBlocksManager guideManager; // Reference to guide blocks manager
@@ -34,7 +33,7 @@ public class GameManager : MonoBehaviour
     private float lastMoveTime = -999f;     // last time a move was performed
     
     [Header("Game Settings")]
-    private float gameTimer = 0.0f;
+    // private float gameTimer = 0.0f;
     public float fallSpeed = 0.8f; // How often piece falls (seconds)
     private GameState currentState;
     private PlayingState playingState = PlayingState.Moving;

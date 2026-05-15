@@ -90,16 +90,17 @@ public class GuideBlocksManager : MonoBehaviour
                 upcomingPieces.Add(piece);
                 // Debugog($"Generated piece {i}: {piece.shape.GetLength(0)}x{piece.shape.GetLength(1)}");
             }
-            else
-            {
-                // DebugogError($"Failed to generate piece {i}");
-                // Add a default piece
-                Tetromino defaultPiece = new Tetromino();
-                defaultPiece.shape = new int[2, 2] { {1, 1}, {1, 1} };
-                defaultPiece.tileIndex = 1;
-                defaultPiece.position = Vector2Int.zero;
-                upcomingPieces.Add(defaultPiece);
-            }
+            // else
+            // {
+            //     // DebugogError($"Failed to generate piece {i}");
+            //     // Add a default piece
+            //     Tetromino defaultPiece = new Tetromino();
+            //     defaultPiece.shape = new int[2, 2] { {1, 1}, {1, 1} };
+            //     defaultPiece.tileIndex = 1;
+            //     defaultPiece.PaintTetromino();
+            //     defaultPiece.position = Vector2Int.zero;
+            //     upcomingPieces.Add(defaultPiece);
+            // }
         }
         
         // Debugog($"Calling UpdateGuideBoard with {upcomingPieces.Count} pieces");
@@ -134,6 +135,10 @@ public class GuideBlocksManager : MonoBehaviour
             // DebugogWarning($"Tile index {tetromino.tileIndex} out of bounds (0-{tetrominoTiles.Length - 1}). Using 1.");
             tetromino.tileIndex = 1;
         }
+
+        // Paint the tetromino shape with its tile index for easier drawing in guide
+        Debug.Log($"Generated Tetromino: Shape {tetromino.shape.GetLength(0)}x{tetromino.shape.GetLength(1)}, TileIndex {tetromino.tileIndex}");
+        tetromino.PaintTetromino();
         
         // Position will be set when drawing in guide
         tetromino.position = Vector2Int.zero;
@@ -268,7 +273,7 @@ public class GuideBlocksManager : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            // DebugogError($"Exception in UpdateGuideBoard: {e.Message}\n{e.StackTrace}");
+            Debug.LogError($"Exception in UpdateGuideBoard: {e.Message}\n{e.StackTrace}");
             throw;
         }
     }
@@ -340,7 +345,7 @@ public class GuideBlocksManager : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            // DebugogError($"Exception in DrawGuideBlocks: {e.Message}\n{e.StackTrace}");
+            Debug.LogError($"Exception in DrawGuideBlocks: {e.Message}\n{e.StackTrace}");
             throw;
         }
     }
@@ -356,11 +361,11 @@ public class GuideBlocksManager : MonoBehaviour
                 var piece = upcomingPieces[i];
                 if (piece != null && piece.shape != null)
                 {
-                    // Debugog($"Piece {i + 1}: TileIndex {piece.tileIndex}, Shape {piece.shape.GetLength(0)}x{piece.shape.GetLength(1)}");
+                    Debug.Log($"Piece {i + 1}: TileIndex {piece.tileIndex}, Shape {piece.shape.GetLength(0)}x{piece.shape.GetLength(1)}");
                 }
                 else
                 {
-                    // Debugog($"Piece {i + 1}: NULL");
+                    Debug.LogError($"Piece {i + 1}: NULL");
                 }
             }
         }

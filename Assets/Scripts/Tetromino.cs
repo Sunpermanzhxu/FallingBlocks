@@ -31,4 +31,20 @@ public class Tetromino
         
         return clone;
     }
+
+    public void PaintTetromino()
+    {
+        if (shape == null) return;
+
+        for (int i = 0; i < shape.GetLength(0); i++)
+        {
+            for (int j = 0; j < shape.GetLength(1); j++)
+            {
+                if (shape[i, j] != 0) // Assuming non-zero means a block is present
+                {
+                    shape[i, j] = tileIndex;
+                }
+            }
+        }
+    }
 }
