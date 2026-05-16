@@ -44,6 +44,9 @@ public class GameManager : MonoBehaviour
     public InputActionReference land;
     public InputActionReference pause;
 
+    [Header("Canvas References")]
+    public CanvasGroup pauseMenuCanvas; // Assign in Inspector
+
     #region Unity Lifecycle
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -850,11 +853,18 @@ public class GameManager : MonoBehaviour
         {
             currentState = GameState.Paused;
             Debug.Log("Game Paused");
+            // Show pause menu UI
+            pauseMenuCanvas.alpha = 1f;
+            pauseMenuCanvas.interactable = true;
+            pauseMenuCanvas.blocksRaycasts = true;
         }
         else if (currentState == GameState.Paused)
         {
             currentState = GameState.Playing;
             Debug.Log("Game Resumed");
+            pauseMenuCanvas.alpha = 0f;
+            pauseMenuCanvas.interactable = false;
+            pauseMenuCanvas.blocksRaycasts = false;
         }
     }
     #endregion

@@ -126,15 +126,18 @@ public class GuideBlocksManager : MonoBehaviour
         int shapeIndex = Random.Range(0, tetrominoShapes.Count);
         tetromino.shape = tetrominoShapes[shapeIndex];
         
-        // Use shape index + 1 for tile index (assuming 0 is empty)
-        tetromino.tileIndex = shapeIndex + 1;
+        // // Use shape index + 1 for tile index (assuming 0 is empty)
+        // tetromino.tileIndex = shapeIndex + 1;
         
-        // Ensure tileIndex is valid for tetrominoTiles array
-        if (tetrominoTiles != null && tetromino.tileIndex >= tetrominoTiles.Length)
-        {
-            // DebugogWarning($"Tile index {tetromino.tileIndex} out of bounds (0-{tetrominoTiles.Length - 1}). Using 1.");
-            tetromino.tileIndex = 1;
-        }
+        // // Ensure tileIndex is valid for tetrominoTiles array
+        // if (tetrominoTiles != null && tetromino.tileIndex >= tetrominoTiles.Length)
+        // {
+        //     // DebugogWarning($"Tile index {tetromino.tileIndex} out of bounds (0-{tetrominoTiles.Length - 1}). Using 1.");
+        //     tetromino.tileIndex = 1;
+        // }
+
+        // TODO: all tileIndex use 1 for now, changelater
+        tetromino.tileIndex = 1;
 
         // Paint the tetromino shape with its tile index for easier drawing in guide
         Debug.Log($"Generated Tetromino: Shape {tetromino.shape.GetLength(0)}x{tetromino.shape.GetLength(1)}, TileIndex {tetromino.tileIndex}");
