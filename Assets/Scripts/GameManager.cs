@@ -46,15 +46,14 @@ public class GameManager : MonoBehaviour
 
     [Header("Canvas References")]
     public CanvasGroup pauseMenuCanvas; // Assign in Inspector
+    // Continue button reference
+    public UnityEngine.UI.Button continueButton; // Assign in Inspector
 
     #region Unity Lifecycle
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         gameBoard = new int[rows, columns];
-
-        InitializeGameBoard();
-        DrawGameBoard();
 
         // Initialize guide manager if not set
         if (guideManager == null)
@@ -79,12 +78,6 @@ public class GameManager : MonoBehaviour
         if (guideManager != null)
         {
             guideManager.tetrominoTiles = tetrominoTiles;
-            
-            // Ensure guideBoard is initialized before generating pieces
-            guideManager.InitializeGuideBoard();
-            
-            // Force reinitialization of guide manager with new tiles
-            guideManager.GenerateUpcomingPieces();
         }
         else
         {
@@ -92,13 +85,32 @@ public class GameManager : MonoBehaviour
             return;
         }
         
-        // Spawn first piece
-        SpawnNewPiece();
         
-        currentState = GameState.Playing;
+        currentState = GameState.Paused;
         // Note: SpawnNewPiece() sets playingState to PlayingState.Moving
 
         Debug.Log("Game loaded with guide blocks system");
+    }
+
+    private void NewGame()
+    {
+        // renew game board
+        InitializeGameBoard();
+        fallingPieces.Clear();
+        
+        // clear and init guideManager things
+        guideManager.ClearGuideBoard();
+
+        Debug.Log("New Game");
+        DrawGameBoard();
+        // Spawn first piece
+        SpawnNewPiece();
+        playingState = PlayingState.Moving;
+        
+        // Ensure guideBoard is initialized before generating pieces
+        guideManager.InitializeGuideBoard();
+        // Force reinitialization of guide manager with new tiles
+        guideManager.GenerateUpcomingPieces();
     }
 
     private void InitializeGameBoard()
@@ -224,7 +236,6 @@ public class GameManager : MonoBehaviour
             
             // Always redraw the board to ensure background tiles are preserved
             DrawGameBoard();
-            // TODO: print all pieces (current piece + chain pieces) in one function to avoid flickering and ensure correct layering (current piece on top, chain pieces below)
             for (int i = 0; i < fallingPieces.Count; i++)
             {
                 DrawCurrentPiece(i);
@@ -866,6 +877,39 @@ public class GameManager : MonoBehaviour
             pauseMenuCanvas.interactable = false;
             pauseMenuCanvas.blocksRaycasts = false;
         }
+    }
+    #endregion
+
+    #region UI Button Callbacks
+    public void OnNewGameButton()
+    {
+        Debug.Log("New Game");
+        NewGame();
+        // enable continue button
+        continueButton.interactable = true;
+        currentState = GameState.Playing;
+        Debug.Log("New Game Started from New Game Button");
+        pauseMenuCanvas.alpha = 0f;
+        pauseMenuCanvas.interactable = false;
+        pauseMenuCanvas.blocksRaycasts = false;
+    }
+
+    public void OnContinueButton()
+    {
+        if (currentState == GameState.Paused)
+        {
+            currentState = GameState.Playing;
+            Debug.Log("Game Resumed from Continue Button");
+            pauseMenuCanvas.alpha = 0f;
+            pauseMenuCanvas.interactable = false;
+            pauseMenuCanvas.blocksRaycasts = false;
+        }
+    }
+
+    public void OnExitButton()
+    {
+        Debug.Log("Exit Game");
+        Application.Quit();
     }
     #endregion
 }

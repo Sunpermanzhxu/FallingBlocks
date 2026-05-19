@@ -374,4 +374,23 @@ public class GuideBlocksManager : MonoBehaviour
         }
     }
 
+    public void ClearGuideBoard()
+    {
+        if (guideBoard != null)
+        {
+            for (int i = 0; i < guideBoard.GetLength(0); i++)
+            {
+                for (int j = 0; j < guideBoard.GetLength(1); j++)
+                {
+                    guideBoard[i, j] = 0;
+                }
+            }
+        }
+        
+        if (guideTilemap != null)
+        {
+            guideTilemap.ClearAllTiles();
+        }
+    }
+
 }
