@@ -167,56 +167,27 @@ public class GameManager : MonoBehaviour
                         bool movedDown = MovePieceDown();
                         if (!movedDown)
                         {
-                            // playingState = PlayingState.Clearing;
+                            playingState = PlayingState.Clearing;
                             fallingPieces.Clear(); // Clear the list of falling pieces as they are now part of the board
-                            CheckForClearing();
-                            // if no clearing, go to spawning. if cleared, go to clearing state to let blocks fall
-                            if (fallingPieces.Count > 0)
-                            {
-                                Debug.Log("Blocks need to fall after clearing - starting clearing sequence");
-                                playingState = PlayingState.Clearing;
-                            }
-                            else
-                            {
-                                Debug.Log("No blocks to fall after landing - spawning new piece");
-                                playingState = PlayingState.Spawning;
-                            }
+                            Debug.Log("Piece landed - switching to Clearing state");
                         }
                         fallTimer = 0f;
                     }
                     break;
                     
                 case PlayingState.Clearing:
-                    // CheckForClearing();
-                    // TODO: if cleared do the strip. move will not be processed here
-                    fallTimer += Time.deltaTime;
-                    if (fallTimer >= fallSpeed)
+                    // If cleared do the strip. move will not be processed here
+                    CheckForClearing();
+                    if (loggedClearedRowForChainFall >= 0)
                     {
-                        bool movedDown = MovePieceDown();
-                        Debug.Log("a move was executed in Clearing state, movedDown=" + movedDown);
-                        if (!movedDown)
-                        {
-                            // After all blocks have fallen as much as they can, check if we need to start chain falling
-                            
-                            // playingState = PlayingState.Landing;
-                            fallingPieces.Clear();
-
-                            PickBlocksForChainFall();
-                            // reset loggedClearedRowForChainFall after checking for chain fall to avoid infinite loop of chain fall
-                            loggedClearedRowForChainFall = -1;
-                            // go to landing if have blocks for chain fall, or go to spawning
-                            if (fallingPieces.Count > 0)
-                            {
-                                Debug.Log("Chain fall detected - starting landing sequence for chain blocks");
-                                playingState = PlayingState.Landing;
-                            }
-                            else
-                            {
-                                Debug.Log("No chain fall - spawning new piece");
-                                playingState = PlayingState.Spawning;
-                            }
-                        }
-                        fallTimer = 0f;
+                        Debug.Log($"Rows cleared with lowest cleared row at {loggedClearedRowForChainFall}. Preparing for landing.");
+                        StripBlocksAboveClearedRow();
+                        playingState = PlayingState.Landing;
+                    }
+                    else
+                    {
+                        Debug.Log("No rows cleared. Spawning new piece.");
+                        playingState = PlayingState.Spawning;
                     }
                     break;
 
@@ -241,6 +212,16 @@ public class GameManager : MonoBehaviour
                 DrawCurrentPiece(i);
             }
         }
+    }
+
+    private void OnGameOver()
+    {
+        // Show main menu UI, disable continue button
+        continueButton.interactable = false;
+        pauseMenuCanvas.alpha = 1f;
+        pauseMenuCanvas.interactable = true;
+        pauseMenuCanvas.blocksRaycasts = true;
+        Debug.Log("Game Over! Implement game over logic here.");
     }
     #endregion
 
@@ -355,6 +336,7 @@ public class GameManager : MonoBehaviour
             // Game over - piece can't spawn
             currentState = GameState.GameOver;
             Debug.Log("Game Over! Board is full.");
+            OnGameOver();
             return;
         }
 
@@ -520,8 +502,6 @@ public class GameManager : MonoBehaviour
                 fallingPieces[0].position = originalPos;
             }
         }
-
-        // DrawCurrentPiece(0);
     }
     
     private int[,] RotateMatrix(int[,] matrix)
@@ -564,12 +544,11 @@ public class GameManager : MonoBehaviour
         
     }
     
-    // clear the full row, make all rows above a falling piece to be moved down in clearing state
+    // clear the full row, and log the lowest cleared row, -1 if none cleared
     private void CheckForClearing()
     {
         bool anyRowsCleared = false;
         int lowestClearedRow = -1; // Track the lowest cleared row for guide block generation
-        int highestClearedRow = -1; // Track the highest cleared row for guide block generation
         
         // Simple row clearing check
         for (int row = 0; row < rows; row++)
@@ -592,18 +571,14 @@ public class GameManager : MonoBehaviour
                 {
                     lowestClearedRow = row;
                 }
-                if (highestClearedRow == -1 || row > highestClearedRow)
-                {
-                    highestClearedRow = row;
-                }
                 
                 // Clear the row
                 for (int col = 0; col < columns; col++)
                 {
                     gameBoard[row, col] = 0;
                 }
-                // // Redraw board
-                // DrawGameBoard();
+
+                Debug.Log($"Row cleared at {row}");
                 
                 // Start from the same row since rows shifted down
                 row--;
@@ -613,62 +588,39 @@ public class GameManager : MonoBehaviour
         // make all blocks above the highest cleared row a falling piece
         if (anyRowsCleared)
         {
-            Debug.Log($"Rows cleared from {lowestClearedRow} to {highestClearedRow}");
-            // get all rows above the highest cleared row and make them a falling piece
-            int[,] blocks_above_cleared_rows = new int[rows - highestClearedRow - 1, columns];
-            Debug.Log($"blocks_above_cleared_rows dimension {blocks_above_cleared_rows.GetLength(0)} to {blocks_above_cleared_rows.GetLength(1)}");
-            for (int row = highestClearedRow + 1; row < rows; row++)
-            {
-                for (int col = 0; col < columns; col++)
-                {
-                    int blocks_row_index = row - (highestClearedRow + 1);
-                    blocks_above_cleared_rows[blocks_row_index, col] = gameBoard[row, col];
-                    gameBoard[row, col] = 0; // clear from board to prepare for falling
-                    if (gameBoard[row, col] != 0)
-                    {
-                        Debug.Log($"Block at ({row},{col}) with tile index {gameBoard[row, col]} added to falling piece");
-                    }
-                }
-            }
-
-            Tetromino fallingPiece = new Tetromino();
-            fallingPiece.position = new Vector2Int(
-                0, highestClearedRow + 1
-            );
-            fallingPiece.shape = blocks_above_cleared_rows;
-            Debug.Log($"new piece at ({fallingPiece.position.x}, {fallingPiece.position.y}) with tile index {fallingPiece.shape[0, 0]}");
-
-            fallingPieces.Add(fallingPiece);
-
             // log loggedClearedRowForChainFall
             loggedClearedRowForChainFall = lowestClearedRow;
+        }
+        else
+        {
+            loggedClearedRowForChainFall = -1; // reset if no rows cleared to avoid unintended chain fall
         }
 
     }
 
-    private void PickBlocksForChainFall()
+    private void StripBlocksAboveClearedRow()
     {
-        if (loggedClearedRowForChainFall <= 0)
+        if (loggedClearedRowForChainFall < 0)
         {
             Debug.Log("No cleared row logged for chain fall checking.");
             return;
         }
         loggedClearedRowForChainFall -= 1;
 
-        // Find the crack columns below the cleared row
-        List<int> crackColumn = new List<int>();
-        for (int col = 0; col < columns; col++)
-        {
-            if (gameBoard[loggedClearedRowForChainFall, col] == 0)
-            {
-                crackColumn.Add(col);
-                break;
-            }
-        }
-        if (crackColumn.Count == 0) return;
+        // // Find the crack columns below the cleared row
+        // List<int> crackColumn = new List<int>();
+        // for (int col = 0; col < columns; col++)
+        // {
+        //     if (gameBoard[loggedClearedRowForChainFall, col] == 0)
+        //     {
+        //         crackColumn.Add(col);
+        //         break;
+        //     }
+        // }
+        // if (crackColumn.Count == 0) return;
 
         // go up from each crack column to find falling blocks
-        foreach (int col in crackColumn)
+        for(int col = 0; col < columns; col++)
         {
             // if several blocks are connected, they should fall together as a piece
             List<int> connected_blocks = new List<int>();
@@ -860,6 +812,15 @@ public class GameManager : MonoBehaviour
 
     private void OnPause(InputAction.CallbackContext context)
     {
+        // if player pressed tab but it is new game
+        if (continueButton.interactable == false)
+        {
+            // the button is not interactable, meaning the player has not started a new game yet, so we ignore the pause input
+            Debug.Log("Pause input ignored because continue button is not interactable (no game started)");
+            return;
+        }
+
+
         if (currentState == GameState.Playing)
         {
             currentState = GameState.Paused;
