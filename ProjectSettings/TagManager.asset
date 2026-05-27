@@ -47,5 +47,8 @@ TagManager:
   - name: Guide
     uniqueID: 909911573
     locked: 0
+  - name: Vissual Effect
+    uniqueID: 4049598037
+    locked: 0
   m_RenderingLayers:
   - Default

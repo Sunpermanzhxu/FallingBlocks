@@ -15,7 +15,10 @@ public class GameManager : MonoBehaviour
     private int[,] gameBoard;
     public Tilemap tilemap;            // Assign in Inspector
     public TileBase[] tetrominoTiles; // Your tile assets for different pieces
+    public Tilemap visualEffectTilemap; // Tilemap for visual effects like clearing lines, assign in Inspector
+    public TileBase landingEffectTile; // Tile for landing effect, assign in Inspector
     public Vector2Int tileOffset = new Vector2Int(0, 0); // Adjust as needed for tile placement
+    private int newestCrackColumn;
 
     [Header("Guide Blocks System")]
     public GuideBlocksManager guideManager; // Reference to guide blocks manager
@@ -34,7 +37,8 @@ public class GameManager : MonoBehaviour
     
     [Header("Game Settings")]
     // private float gameTimer = 0.0f;
-    public float fallSpeed = 0.8f; // How often piece falls (seconds)
+    public float fallSpeed = 0.06f; // How often piece falls (seconds)
+    private int stackHeightLimit = 25; // if blocks reach this height, game over
     private GameState currentState;
     private PlayingState playingState = PlayingState.Moving;
 
@@ -128,7 +132,7 @@ public class GameManager : MonoBehaviour
         
         // 2. Start crack at a random column near the bottom
         int crackCol = Random.Range(2, columns - 2); // avoid edges
-        for (int row = 0; row < fillRows; row++)
+        for (int row = fillRows - 1; row >=0; row--)
         {
             // Generate row with current crack column
             int[] rowData = GenerateRowWithCrack(columns, crackCol, 0.2f);
@@ -142,6 +146,7 @@ public class GameManager : MonoBehaviour
             // Randomly shift crack column for next row (the "meander")
             crackCol += Random.Range(-1, 2);
             crackCol = Mathf.Clamp(crackCol, 0, columns - 1);
+            newestCrackColumn = crackCol;
         }
 
     }
@@ -151,12 +156,14 @@ public class GameManager : MonoBehaviour
     {
         if (currentState == GameState.Playing)
         {
+            // TODO: make the board generate new rows and rise
             // Handle different playing states
             switch (playingState)
             {
                 case PlayingState.Moving:
                     // User can move or rotate the piece
                     HandlePlayerInput();
+                    DrawLandingEffect();
                     break;
                     
                 case PlayingState.Landing:
@@ -190,12 +197,16 @@ public class GameManager : MonoBehaviour
                         playingState = PlayingState.Spawning;
                     }
                     break;
-
-                case PlayingState.ChainFalling:
-                    // ProcessChainFall();
-                    break;
                     
                 case PlayingState.Spawning:
+
+                    // check for game over condition before spawning new piece
+                    if (IsGameOver())
+                    {
+                        OnGameOver();
+                        return;
+                    }
+
                     // Spawn new piece
                     Debug.Log("State: Spawning - getting new piece");
                     SpawnNewPiece();
@@ -214,8 +225,24 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private bool IsGameOver()
+    {
+        // Check if any blocks have reached the stack height limit
+        for (int col = 0; col < columns; col++)
+        {
+            if (gameBoard[stackHeightLimit, col] != 0)
+            {
+                Debug.Log($"Game Over condition met: block at row {stackHeightLimit}, column {col}");
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void OnGameOver()
     {
+        // pause game and disable player input
+        currentState = GameState.GameOver;
         // Show main menu UI, disable continue button
         continueButton.interactable = false;
         pauseMenuCanvas.alpha = 1f;
@@ -726,18 +753,40 @@ public class GameManager : MonoBehaviour
         {
             StartLanding();
         }
+
         
-        // // Quick drop (optional - keep for compatibility)
-        // if (moveInput.y < -0.5f)
-        // {
-        //     // Quick drop - immediately land
-        //     while (IsPositionValid(currentPiecePosition + Vector2Int.down))
-        //     {
-        //         MovePieceDown();
-        //     }
-        //     // Trigger landing after quick drop
-        //     StartLanding();
-        // }
+    }
+
+    // Draws a strip of tiles below the gameover line to indicate where the piece will land if the player decides to land immediately. This is called in HandlePlayerInput() to update in real time as the player moves the piece around.
+    private void DrawLandingEffect()
+    {
+        // useful variable: stackHeightLimit
+        // we clear the strip first to avoid stacking landing effect tiles when the player moves the piece around, and we only draw the landing effect for the current piece (the first one in the fallingPieces list)
+        BoundsInt area = new BoundsInt(
+            new Vector3Int(tileOffset.x, tileOffset.y, 0), 
+            new Vector3Int(columns, stackHeightLimit, 1)
+            );
+        TileBase[] emptyTiles = new TileBase[area.size.x * area.size.y];
+        visualEffectTilemap.SetTilesBlock(area, emptyTiles);
+
+
+        if (playingState == PlayingState.Moving && fallingPieces.Count > 0)
+        {
+            int piece_width = fallingPieces[0].shape.GetLength(1);
+            int piece_column = fallingPieces[0].position.x;
+
+            // draw the tile
+            BoundsInt effect_area = new BoundsInt(
+                new Vector3Int(tileOffset.x + piece_column, tileOffset.y, 0), 
+                new Vector3Int(piece_width, stackHeightLimit, 1)
+                );
+            TileBase[] effectTiles = new TileBase[effect_area.size.x * effect_area.size.y];
+            for (int i = 0; i < effectTiles.Length; i++)
+            {
+                effectTiles[i] = landingEffectTile;
+            }
+            visualEffectTilemap.SetTilesBlock(effect_area, effectTiles);
+        }
     }
     
     private void StartLanding()
@@ -826,17 +875,13 @@ public class GameManager : MonoBehaviour
             currentState = GameState.Paused;
             Debug.Log("Game Paused");
             // Show pause menu UI
-            pauseMenuCanvas.alpha = 1f;
-            pauseMenuCanvas.interactable = true;
-            pauseMenuCanvas.blocksRaycasts = true;
+            ToggleCanvasGroup(pauseMenuCanvas, true);
         }
         else if (currentState == GameState.Paused)
         {
             currentState = GameState.Playing;
             Debug.Log("Game Resumed");
-            pauseMenuCanvas.alpha = 0f;
-            pauseMenuCanvas.interactable = false;
-            pauseMenuCanvas.blocksRaycasts = false;
+            ToggleCanvasGroup(pauseMenuCanvas, false);
         }
     }
     #endregion
@@ -850,9 +895,7 @@ public class GameManager : MonoBehaviour
         continueButton.interactable = true;
         currentState = GameState.Playing;
         Debug.Log("New Game Started from New Game Button");
-        pauseMenuCanvas.alpha = 0f;
-        pauseMenuCanvas.interactable = false;
-        pauseMenuCanvas.blocksRaycasts = false;
+        ToggleCanvasGroup(pauseMenuCanvas, false);
     }
 
     public void OnContinueButton()
@@ -861,9 +904,7 @@ public class GameManager : MonoBehaviour
         {
             currentState = GameState.Playing;
             Debug.Log("Game Resumed from Continue Button");
-            pauseMenuCanvas.alpha = 0f;
-            pauseMenuCanvas.interactable = false;
-            pauseMenuCanvas.blocksRaycasts = false;
+            ToggleCanvasGroup(pauseMenuCanvas, false);
         }
     }
 
@@ -871,6 +912,13 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Exit Game");
         Application.Quit();
+    }
+
+    private void ToggleCanvasGroup(CanvasGroup canvasGroup, bool show)
+    {
+        canvasGroup.alpha = show ? 1f : 0f;
+        canvasGroup.interactable = show;
+        canvasGroup.blocksRaycasts = show;
     }
     #endregion
 }
@@ -889,6 +937,5 @@ public enum PlayingState
     Moving,             // time when user move or rotate the piece
     Landing,            // time when the blocks fall, happens after player decide to land the piece
     Clearing,
-    ChainFalling,
     Spawning
 }
