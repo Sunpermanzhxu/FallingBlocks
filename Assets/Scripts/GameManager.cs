@@ -34,10 +34,12 @@ public class GameManager : MonoBehaviour
     private float fallTimer = 0f;
     public float moveCooldown = 0.12f;      // seconds between moves
     private float lastMoveTime = -999f;     // last time a move was performed
+    private float riseTimer = 0f;           // timer for rising new rows
     
     [Header("Game Settings")]
     // private float gameTimer = 0.0f;
     public float fallSpeed = 0.06f; // How often piece falls (seconds)
+    public float riseSpeed = 0.5f; // How often new rows are added and rise (seconds)
     private int stackHeightLimit = 25; // if blocks reach this height, game over
     private GameState currentState;
     private PlayingState playingState = PlayingState.Moving;
@@ -157,6 +159,21 @@ public class GameManager : MonoBehaviour
         if (currentState == GameState.Playing)
         {
             // TODO: make the board generate new rows and rise
+            riseTimer += Time.deltaTime;
+            if (riseTimer >= riseSpeed)
+            {
+                // Generate and add a new row at the bottom
+                GenerateNewRow();
+                riseTimer = 0f;
+            }
+            
+            // check for game over condition before spawning new piece
+            if (IsGameOver())
+            {
+                OnGameOver();
+                return;
+            }
+
             // Handle different playing states
             switch (playingState)
             {
@@ -199,13 +216,6 @@ public class GameManager : MonoBehaviour
                     break;
                     
                 case PlayingState.Spawning:
-
-                    // check for game over condition before spawning new piece
-                    if (IsGameOver())
-                    {
-                        OnGameOver();
-                        return;
-                    }
 
                     // Spawn new piece
                     Debug.Log("State: Spawning - getting new piece");
@@ -829,6 +839,28 @@ public class GameManager : MonoBehaviour
         return row;
     }
 
+    private void GenerateNewRow()
+    {
+        // Shift all rows up
+        for (int row = rows - 1; row > 0; row--)
+        {
+            for (int col = 0; col < columns; col++)
+            {
+                gameBoard[row, col] = gameBoard[row - 1, col];
+            }
+        }
+        
+        // Generate new bottom row with crack
+        int crackCol = newestCrackColumn + Random.Range(-1, 2);
+        crackCol = Mathf.Clamp(crackCol, 0, columns - 1);
+        int[] newRow = GenerateRowWithCrack(columns, crackCol, erosionChance: 0.2f);
+        for (int col = 0; col < columns; col++)
+        {
+            gameBoard[0, col] = newRow[col];
+        }
+        
+        newestCrackColumn = crackCol;
+    }
     #endregion
 
 

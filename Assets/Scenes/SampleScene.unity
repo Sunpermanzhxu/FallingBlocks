@@ -2045,6 +2045,7 @@ MonoBehaviour:
   guideManager: {fileID: 1855042942}
   moveCooldown: 0.12
   fallSpeed: 0.06
+  riseSpeed: 2
   move: {fileID: -1680190386980627800, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   rotate: {fileID: 1054326369284598657, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   land: {fileID: -7347388988536016943, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
