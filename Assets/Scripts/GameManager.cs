@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using TMPro;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
@@ -20,15 +21,19 @@ public class GameManager : MonoBehaviour
     public Vector2Int tileOffset = new Vector2Int(0, 0); // Adjust as needed for tile placement
     private int newestCrackColumn;
 
-    [Header("Guide Blocks System")]
+    [Header("Other Managers")]
     public GuideBlocksManager guideManager; // Reference to guide blocks manager
+    public AudioManager audioManager; // Reference to audio manager
 
     [Header("Falling Pieces")]
     // all the falling blocks use the following
     private List<Tetromino> fallingPieces = new List<Tetromino>();
-
     // Track the row index below the cleared rows for chain fall checking
     private int loggedClearedRowForChainFall = -1; 
+
+    [Header("Score Management")]
+    private int score = 0;
+    private int highScore = 0;
 
     [Header("Gameplay Timers")]
     private float fallTimer = 0f;
@@ -54,6 +59,9 @@ public class GameManager : MonoBehaviour
     public CanvasGroup pauseMenuCanvas; // Assign in Inspector
     // Continue button reference
     public UnityEngine.UI.Button continueButton; // Assign in Inspector
+    // score board
+    public TextMeshProUGUI scoreText; // Assign in Inspector 
+    public TextMeshProUGUI highScoreText; // Assign in Inspector 
 
     #region Unity Lifecycle
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -91,6 +99,10 @@ public class GameManager : MonoBehaviour
             return;
         }
         
+        score = 0;
+        highScore = PlayerPrefs.GetInt("HighScore", 0);
+        scoreText.text = "Score: 0";
+        highScoreText.text = "High Score: " + highScore.ToString();
         
         currentState = GameState.Paused;
         // Note: SpawnNewPiece() sets playingState to PlayingState.Moving
@@ -117,6 +129,8 @@ public class GameManager : MonoBehaviour
         guideManager.InitializeGuideBoard();
         // Force reinitialization of guide manager with new tiles
         guideManager.GenerateUpcomingPieces();
+
+        audioManager.SwitchBGM(0); // Switch to gameplay music
     }
 
     private void InitializeGameBoard()
@@ -207,6 +221,9 @@ public class GameManager : MonoBehaviour
                         Debug.Log($"Rows cleared with lowest cleared row at {loggedClearedRowForChainFall}. Preparing for landing.");
                         StripBlocksAboveClearedRow();
                         playingState = PlayingState.Landing;
+
+                        // Play line clear sound effect
+                        audioManager.PlayClearSound();
                     }
                     else
                     {
@@ -259,6 +276,7 @@ public class GameManager : MonoBehaviour
         pauseMenuCanvas.interactable = true;
         pauseMenuCanvas.blocksRaycasts = true;
         Debug.Log("Game Over! Implement game over logic here.");
+        // TODO: make audio manager play game over music or sound effect
     }
     #endregion
 
@@ -696,39 +714,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // // For each column, collect blocks above cleared row within limit
-        // for (int col = 0; col < columns; col++)
-        // {
-        //     int blockCountAbove = 0;
-        //     for (int row = clearedRow + 1; row < rows; row++)
-        //     {
-        //         if (gameBoard[row, col] != 0)
-        //             blockCountAbove++;
-        //     }
-        //     if (blockCountAbove > chainFallRowLimit)
-        //     {
-        //         Debug.Log($"Column {col} exceeds chain fall limit. Aborting chain fall.");
-        //         chainBlocks.Clear();
-        //         return;
-        //     }
-
-        //     // Collect each block as a ChainBlock
-        //     for (int row = clearedRow + 1; row < clearedRow + 1 + chainFallRowLimit && row < rows; row++)
-        //     {
-        //         int tileIndex = gameBoard[row, col];
-        //         if (tileIndex != 0)
-        //         {
-        //             chainBlocks.Add(new ChainBlock { column = col, tileIndex = tileIndex });
-        //             gameBoard[row, col] = 0;   // remove from board
-        //         }
-        //     }
-        // }
-
-        // if (chainBlocks.Count > 0)
-        // {
-        //     Debug.Log($"Chain fall ready: {chainBlocks.Count} blocks will fall automatically.");
-        //     DrawGameBoard();
-        // }
     }
     
     private void HandlePlayerInput()
@@ -908,12 +893,14 @@ public class GameManager : MonoBehaviour
             Debug.Log("Game Paused");
             // Show pause menu UI
             ToggleCanvasGroup(pauseMenuCanvas, true);
+            audioManager.StopBGM(); // Stop background music when paused
         }
         else if (currentState == GameState.Paused)
         {
             currentState = GameState.Playing;
             Debug.Log("Game Resumed");
             ToggleCanvasGroup(pauseMenuCanvas, false);
+            audioManager.SwitchBGM(0); // Resume background music when unpaused
         }
     }
     #endregion
