@@ -4,9 +4,6 @@ using TMPro;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
-// TODO: big overhaul. fix clearing. current situation: the chunk after clear seems good but do not fall
-// TODO: try options: use lowest cleared row as a start to chop all blocks above into pieces by column
-
 public class GameManager : MonoBehaviour
 {
     // 30 * 20 game board
@@ -115,6 +112,8 @@ public class GameManager : MonoBehaviour
         // renew game board
         InitializeGameBoard();
         fallingPieces.Clear();
+        score = 0;
+        scoreText.text = "Score: 0";
         
         // clear and init guideManager things
         guideManager.ClearGuideBoard();
@@ -276,7 +275,8 @@ public class GameManager : MonoBehaviour
         pauseMenuCanvas.interactable = true;
         pauseMenuCanvas.blocksRaycasts = true;
         Debug.Log("Game Over! Implement game over logic here.");
-        // TODO: make audio manager play game over music or sound effect
+        // make audio manager play game over music or sound effect
+        audioManager.PlayGameOverSound();
     }
     #endregion
 
@@ -603,6 +603,7 @@ public class GameManager : MonoBehaviour
     private void CheckForClearing()
     {
         bool anyRowsCleared = false;
+        int linesCleared = 0;
         int lowestClearedRow = -1; // Track the lowest cleared row for guide block generation
         
         // Simple row clearing check
@@ -621,6 +622,7 @@ public class GameManager : MonoBehaviour
             if (rowFull)
             {
                 anyRowsCleared = true;
+                linesCleared++;
                 // record the lowest and highest cleared rows for guide block generation
                 if (lowestClearedRow == -1 || row < lowestClearedRow)
                 {
@@ -645,6 +647,7 @@ public class GameManager : MonoBehaviour
         {
             // log loggedClearedRowForChainFall
             loggedClearedRowForChainFall = lowestClearedRow;
+            IncreaseScore(linesCleared);
         }
         else
         {
@@ -846,6 +849,27 @@ public class GameManager : MonoBehaviour
         
         newestCrackColumn = crackCol;
     }
+
+    private void IncreaseScore(int linesCleared)
+    {
+        // Simple scoring: 100 points per line, with a bonus for multiple lines
+        int points = linesCleared * 100;
+        if (linesCleared > 1)
+        {
+            points += (linesCleared - 1) * 50; // Bonus for multiple lines
+        }
+        score += points;
+        scoreText.text = "Score: " + score.ToString();
+
+        // Check for high score
+        if (score > highScore)
+        {
+            highScore = score;
+            highScoreText.text = "High Score: " + highScore.ToString();
+            PlayerPrefs.SetInt("HighScore", highScore);
+            PlayerPrefs.Save();
+        }
+    }
     #endregion
 
 
@@ -893,14 +917,14 @@ public class GameManager : MonoBehaviour
             Debug.Log("Game Paused");
             // Show pause menu UI
             ToggleCanvasGroup(pauseMenuCanvas, true);
-            audioManager.StopBGM(); // Stop background music when paused
+            audioManager.PauseBGM(); // Pause background music when paused
         }
         else if (currentState == GameState.Paused)
         {
             currentState = GameState.Playing;
             Debug.Log("Game Resumed");
             ToggleCanvasGroup(pauseMenuCanvas, false);
-            audioManager.SwitchBGM(0); // Resume background music when unpaused
+            audioManager.ResumeBGM(); // Resume background music when unpaused
         }
     }
     #endregion

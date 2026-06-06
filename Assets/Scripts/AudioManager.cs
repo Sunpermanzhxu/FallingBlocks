@@ -43,11 +43,24 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    public void StopBGM()
+    public void PlayGameOverSound()
+    {
+        SwitchBGM(1); // Assuming the game over music is at index 1 in the backgroundMusics array
+    }
+
+    public void PauseBGM()
     {
         if (audioSource != null)
         {
-            audioSource.Stop();
+            audioSource.Pause();
+        }
+    }
+
+    public void ResumeBGM()
+    {
+        if (audioSource != null)
+        {
+            audioSource.UnPause();
         }
     }
 }
