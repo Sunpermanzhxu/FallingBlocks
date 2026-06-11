@@ -171,13 +171,31 @@ public class GameManager : MonoBehaviour
     {
         if (currentState == GameState.Playing)
         {
-            // TODO: make the board generate new rows and rise
+            // make the board generate new rows and rise
             riseTimer += Time.deltaTime;
             if (riseTimer >= riseSpeed)
             {
+                int piece_count = fallingPieces.Count;
+                // land landable falling pieces to the board before generating new row, to avoid potential bugs caused by moving pieces up with the rising row
+                while (piece_count > 0)
+                {
+                    if (!IsPositionValid(fallingPieces[piece_count - 1], move_offset: Vector2Int.down))
+                    {
+                        LandPiece(piece_count - 1);
+                        fallingPieces.RemoveAt(piece_count - 1);
+                    }
+                    piece_count--;
+                }
                 // Generate and add a new row at the bottom
                 GenerateNewRow();
                 riseTimer = 0f;
+                
+                // if it makes all pieces land, we switch to clearing state to check if there are rows to clear, and if not we switch back to moving state to let player move the pieces around and decide when to land
+                if (fallingPieces.Count == 0)
+                {
+                    playingState = PlayingState.Clearing;
+                    Debug.Log("All pieces landed due to rising row - switching to Clearing state");
+                }
             }
             
             // check for game over condition before spawning new piece
