@@ -171,31 +171,25 @@ public class GameManager : MonoBehaviour
     {
         if (currentState == GameState.Playing)
         {
+            bool land_check_done = false; // to ensure we only check for landing once per frame, even if there are multiple pieces (like in chain falling)
+
             // make the board generate new rows and rise
             riseTimer += Time.deltaTime;
             if (riseTimer >= riseSpeed)
             {
-                int piece_count = fallingPieces.Count;
-                // land landable falling pieces to the board before generating new row, to avoid potential bugs caused by moving pieces up with the rising row
-                while (piece_count > 0)
-                {
-                    if (!IsPositionValid(fallingPieces[piece_count - 1], move_offset: Vector2Int.down))
-                    {
-                        LandPiece(piece_count - 1);
-                        fallingPieces.RemoveAt(piece_count - 1);
-                    }
-                    piece_count--;
-                }
+                Debug.Log("Rising new row...");
+                land_check_done = true;
+                LandAllLandablePieces(); // make all pieces that can land land before we generate the new row, to avoid potential issues of pieces rising up with the new row and not being able to land immediately
                 // Generate and add a new row at the bottom
                 GenerateNewRow();
                 riseTimer = 0f;
                 
-                // if it makes all pieces land, we switch to clearing state to check if there are rows to clear, and if not we switch back to moving state to let player move the pieces around and decide when to land
-                if (fallingPieces.Count == 0)
-                {
-                    playingState = PlayingState.Clearing;
-                    Debug.Log("All pieces landed due to rising row - switching to Clearing state");
-                }
+                // // if it makes all pieces land, we switch to clearing state to check if there are rows to clear, and if not we switch back to moving state to let player move the pieces around and decide when to land
+                // if (fallingPieces.Count == 0)
+                // {
+                //     playingState = PlayingState.Clearing;
+                //     Debug.Log("All pieces landed due to rising row - switching to Clearing state");
+                // }
             }
             
             // check for game over condition before spawning new piece
@@ -204,6 +198,8 @@ public class GameManager : MonoBehaviour
                 OnGameOver();
                 return;
             }
+
+            Debug.Log("We are here at the start of Update loop, current playing state: " + playingState);
 
             // Handle different playing states
             switch (playingState)
@@ -216,15 +212,28 @@ public class GameManager : MonoBehaviour
                     
                 case PlayingState.Landing:
                     // Blocks fall automatically after user decides to land
+                    
+                    Debug.Log("Now landing......");
                     fallTimer += Time.deltaTime;
                     if (fallTimer >= fallSpeed)
                     {
-                        bool movedDown = MovePieceDown();
-                        if (!movedDown)
+                        // only land if the "land_check_done" flag is false
+                        Debug.Log("Normal landing......");
+                        if (!land_check_done)
+                        {
+                            LandAllLandablePieces();
+                        }
+                        // now all remaining falling pieces should be the ones that are still falling after landing
+                        // if no more pieces can land, we switch to clearing state to check for line clears, and if there are no line clears we switch back to moving state to let player move the pieces around and decide when to land again
+                        if (fallingPieces.Count == 0)
                         {
                             playingState = PlayingState.Clearing;
-                            fallingPieces.Clear(); // Clear the list of falling pieces as they are now part of the board
-                            Debug.Log("Piece landed - switching to Clearing state");
+                            Debug.Log("All pieces landed - switching to Clearing state");
+                        }
+                        else
+                        {
+                            Debug.Log("Moving pieces down......");
+                            MovePieceDown();
                         }
                         fallTimer = 0f;
                     }
@@ -444,46 +453,35 @@ public class GameManager : MonoBehaviour
     }
     
     // Base method, move all fallingPieces
-    private bool MovePieceDown()
+    private void MovePieceDown()
     {
-        bool anyMovedDown = false;
-        int i = 0;
-        while (i < fallingPieces.Count)
+        for (int i = 0; i < fallingPieces.Count; i++)
         {
-            if (MovePieceDown(i))
-            {
-                anyMovedDown = true;
-                i++; // only move to next piece if current piece successfully moved down
-            }
-            else
-            {
-                // current piece has landed and is now part of the board, so we remove it from fallingPieces list
-                fallingPieces.RemoveAt(i);
-                // do not increment i, as we want to check the next piece that has now shifted into the current index
-            }
+            MovePieceDown(i);
         }
-        return anyMovedDown;
+    }
+
+    private void LandAllLandablePieces()
+    {
+        for (int i = fallingPieces.Count - 1; i >= 0; i--)
+    {
+        if (!IsPositionValid(fallingPieces[i], move_offset: Vector2Int.down))
+        {
+            LandPiece(i);
+            fallingPieces.RemoveAt(i);
+            Debug.Log("Piece landed and removed.");
+        }
+    }
     }
 
     // returns true if piece successfully moved down, false if it landed (used for both normal landing and chain falling)
-    private bool MovePieceDown(int piece_index)
+    private void MovePieceDown(int piece_index)
     {
         ClearCurrentPiece(piece_index);
         
         Vector2Int newPosition = fallingPieces[piece_index].position + Vector2Int.down;
-        bool canMoveDown = IsPositionValid(fallingPieces[piece_index], move_offset: Vector2Int.down);
+        fallingPieces[piece_index].position = newPosition;
         
-        if (canMoveDown)
-        {
-            fallingPieces[piece_index].position = newPosition;
-        }
-        else
-        {
-            // Add piece to game board
-            LandPiece(piece_index);
-            // state switching to be handled in Update() at cases that includes landing pieces
-        }
-        return canMoveDown;
     }
     
     // this method is only used if there is only one piece (the new one) in the fallingPieces list
