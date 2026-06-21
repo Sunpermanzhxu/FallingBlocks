@@ -98,8 +98,8 @@ public class GameManager : MonoBehaviour
         
         score = 0;
         highScore = PlayerPrefs.GetInt("HighScore", 0);
-        scoreText.text = "Score: 0";
-        highScoreText.text = "High Score: " + highScore.ToString();
+        scoreText.text = "0";
+        highScoreText.text = highScore.ToString();
         
         currentState = GameState.Paused;
         // Note: SpawnNewPiece() sets playingState to PlayingState.Moving
@@ -113,7 +113,7 @@ public class GameManager : MonoBehaviour
         InitializeGameBoard();
         fallingPieces.Clear();
         score = 0;
-        scoreText.text = "Score: 0";
+        scoreText.text = "0";
         
         // clear and init guideManager things
         guideManager.ClearGuideBoard();
@@ -875,13 +875,13 @@ public class GameManager : MonoBehaviour
             points += (linesCleared - 1) * 50; // Bonus for multiple lines
         }
         score += points;
-        scoreText.text = "Score: " + score.ToString();
+        scoreText.text = score.ToString();
 
         // Check for high score
         if (score > highScore)
         {
             highScore = score;
-            highScoreText.text = "High Score: " + highScore.ToString();
+            highScoreText.text = highScore.ToString();
             PlayerPrefs.SetInt("HighScore", highScore);
             PlayerPrefs.Save();
         }
