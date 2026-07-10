@@ -136,8 +136,8 @@ public class GuideBlocksManager : MonoBehaviour
             tetromino.tileIndex = 1;
         }
 
-        // TODO: all tileIndex use 1 for now, changelater
-        tetromino.tileIndex = 1;
+        // // TODO: all tileIndex use 1 for now, changelater
+        // tetromino.tileIndex = 1;
 
         // Paint the tetromino shape with its tile index for easier drawing in guide
         Debug.Log($"Generated Tetromino: Shape {tetromino.shape.GetLength(0)}x{tetromino.shape.GetLength(1)}, TileIndex {tetromino.tileIndex}");
@@ -252,7 +252,7 @@ public class GuideBlocksManager : MonoBehaviour
                     {
                         for (int j = 0; j < piece.shape.GetLength(1); j++)
                         {
-                            if (piece.shape[i, j] == 1)
+                            if (piece.shape[i, j] >= 1)
                             {
                                 int row = startRow + i;
                                 int col = startCol + j;
@@ -264,7 +264,7 @@ public class GuideBlocksManager : MonoBehaviour
                                 }
                                 else
                                 {
-                                    // DebugogWarning($"Position out of bounds: row={row}, col={col}, board={guideBoard.GetLength(0)}x{guideBoard.GetLength(1)}");
+                                    // DebugogWarning($"Attempted to write outside guideBoard bounds: row={row}, col={col}");
                                 }
                             }
                         }

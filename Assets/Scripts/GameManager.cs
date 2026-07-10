@@ -331,7 +331,7 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < currentPiece.shape.GetLength(1); j++)
             {
-                if (currentPiece.shape[i, j] == 1)
+                if (currentPiece.shape[i, j] >= 1)
                 {
                     int row = currentPiece.position.y + i;
                     int col = currentPiece.position.x + j;
@@ -359,7 +359,7 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < currentPiece.shape.GetLength(1); j++)
             {
-                if (currentPiece.shape[i, j] == 1)
+                if (currentPiece.shape[i, j] >= 1)
                 {
                     int row = currentPiece.position.y + i;
                     int col = currentPiece.position.x + j;
@@ -434,7 +434,7 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < piece.shape.GetLength(1); j++)
             {
-                if (piece.shape[i, j] == 1)
+                if (piece.shape[i, j] >= 1)
                 {
                     int row = piece.position.y + i + offset.y;
                     int col = piece.position.x + j + offset.x;
@@ -600,7 +600,7 @@ public class GameManager : MonoBehaviour
         {
             for (int j = 0; j < fallingPieces[piece_index].shape.GetLength(1); j++)
             {
-                if (fallingPieces[piece_index].shape[i, j] == 1)
+                if (fallingPieces[piece_index].shape[i, j] >= 1)
                 {
                     int row = fallingPieces[piece_index].position.y + i;
                     int col = fallingPieces[piece_index].position.x + j;
