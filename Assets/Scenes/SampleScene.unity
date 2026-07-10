@@ -2638,7 +2638,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.000011444092}
+  m_AnchoredPosition: {x: 0, y: -0.00002861023}
   m_SizeDelta: {x: 0, y: 30}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &1226772748
@@ -3292,7 +3292,12 @@ MonoBehaviour:
   tetrominoTiles:
   - {fileID: 11400000, guid: 0e6504d84c05987499801a0d286c08fc, type: 2}
   - {fileID: 11400000, guid: 7bdac854800ba3b46a53197e8c8b8c52, type: 2}
+  - {fileID: 11400000, guid: 134434855cd138840a0f914609df079e, type: 2}
+  - {fileID: 11400000, guid: cd7fce62105f7b344add3ed9a4c2d925, type: 2}
+  - {fileID: 11400000, guid: 4b297525e199f8044a4e1694f44e55b2, type: 2}
+  - {fileID: 11400000, guid: 5aa53b70efc8ff346850749ec6647062, type: 2}
   - {fileID: 11400000, guid: 7c3469236479c3a4e814288f6909ace0, type: 2}
+  - {fileID: 11400000, guid: e297a9015021baa438930caaf2d6eb8d, type: 2}
   visualEffectTilemap: {fileID: 520053269}
   landingEffectTile: {fileID: 11400000, guid: d694d6e322a6b6c4da77b11b2cb8b478, type: 2}
   tileOffset: {x: -15, y: -15}
