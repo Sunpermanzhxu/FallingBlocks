@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     [Header("Other Managers")]
     public GuideBlocksManager guideManager; // Reference to guide blocks manager
     public AudioManager audioManager; // Reference to audio manager
+    public RowGenManager rowGenManager; // Reference to row generation manager
 
     [Header("Falling Pieces")]
     // all the falling blocks use the following
@@ -70,6 +71,16 @@ public class GameManager : MonoBehaviour
         if (guideManager == null)
         {
             guideManager = FindFirstObjectByType<GuideBlocksManager>();
+        }
+
+        if (audioManager == null)
+        {
+            audioManager = FindFirstObjectByType<AudioManager>();
+        }
+
+        if (rowGenManager == null)
+        {
+            rowGenManager = FindFirstObjectByType<RowGenManager>();
         }
 
         // Check if tetrominoTiles is assigned
@@ -198,8 +209,6 @@ public class GameManager : MonoBehaviour
                 OnGameOver();
                 return;
             }
-
-            Debug.Log("We are here at the start of Update loop, current playing state: " + playingState);
 
             // Handle different playing states
             switch (playingState)
