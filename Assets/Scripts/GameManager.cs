@@ -16,7 +16,6 @@ public class GameManager : MonoBehaviour
     public Tilemap visualEffectTilemap; // Tilemap for visual effects like clearing lines, assign in Inspector
     public TileBase landingEffectTile; // Tile for landing effect, assign in Inspector
     public Vector2Int tileOffset = new Vector2Int(0, 0); // Adjust as needed for tile placement
-    private int newestCrackColumn;
 
     [Header("Other Managers")]
     public GuideBlocksManager guideManager; // Reference to guide blocks manager
@@ -129,6 +128,9 @@ public class GameManager : MonoBehaviour
         // clear and init guideManager things
         guideManager.ClearGuideBoard();
 
+        rowGenManager.boardWidth = columns; // sync the board width with rowGenManager
+        rowGenManager.maxCellValue = tetrominoTiles.Length - 1; // sync the max cell value with the number of tiles
+
         Debug.Log("New Game");
         DrawGameBoard();
         // Spawn first piece
@@ -154,25 +156,18 @@ public class GameManager : MonoBehaviour
             }
         }
         // 1. Calculate how many rows to fill from bottom
-        int fillRows = rows * 3 / 5;  // 18 rows (0 to 17)
+        int fillRows = rows * 1/2;
         
-        // 2. Start crack at a random column near the bottom
-        int crackCol = Random.Range(2, columns - 2); // avoid edges
         for (int row = fillRows - 1; row >=0; row--)
         {
-            // Generate row with current crack column
-            int[] rowData = GenerateRowWithCrack(columns, crackCol, 0.2f);
-            
+            int[] rowData = rowGenManager.GetNewRow();
+            Debug.Log($"Generated new row with length {rowData.Length} for row {row}");
             // Copy into board
             for (int col = 0; col < columns; col++)
             {
                 gameBoard[row, col] = rowData[col];
             }
             
-            // Randomly shift crack column for next row (the "meander")
-            crackCol += Random.Range(-1, 2);
-            crackCol = Mathf.Clamp(crackCol, 0, columns - 1);
-            newestCrackColumn = crackCol;
         }
 
     }
@@ -823,35 +818,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private int[] GenerateRowWithCrack(int columns, int crackColumn, float erosionChance = 0.2f)
-    {
-        // Clamp crack column to valid range
-        crackColumn = Mathf.Clamp(crackColumn, 0, columns - 1);
-        
-        // Start with all filled (1)
-        int[] row = new int[columns];
-        for (int i = 0; i < columns; i++)
-        {
-            row[i] = 1;
-        }
-        
-        // Place the crack (empty cell)
-        row[crackColumn] = 0;
-        
-        // Optional: erode adjacent cells (left/right) with given chance
-        if (erosionChance > 0)
-        {
-            // Left neighbor
-            if (crackColumn > 0 && Random.value < erosionChance)
-                row[crackColumn - 1] = 0;
-            
-            // Right neighbor
-            if (crackColumn < columns - 1 && Random.value < erosionChance)
-                row[crackColumn + 1] = 0;
-        }
-        return row;
-    }
-
     private void GenerateNewRow()
     {
         // Shift all rows up
@@ -862,17 +828,12 @@ public class GameManager : MonoBehaviour
                 gameBoard[row, col] = gameBoard[row - 1, col];
             }
         }
-        
-        // Generate new bottom row with crack
-        int crackCol = newestCrackColumn + Random.Range(-1, 2);
-        crackCol = Mathf.Clamp(crackCol, 0, columns - 1);
-        int[] newRow = GenerateRowWithCrack(columns, crackCol, erosionChance: 0.2f);
+
+        int[] newRow = rowGenManager.GetNewRow();
         for (int col = 0; col < columns; col++)
         {
             gameBoard[0, col] = newRow[col];
         }
-        
-        newestCrackColumn = crackCol;
     }
 
     private void IncreaseScore(int linesCleared)
