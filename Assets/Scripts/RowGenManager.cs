@@ -145,6 +145,29 @@ public class RowGenManager : MonoBehaviour
         return row; // Placeholder for actual pattern extraction logic
     }
 
+    private Pattern DeepCopyPattern(Pattern original)
+    {
+        Pattern copy = new Pattern
+        {
+            name = original.name,
+            have_crack = original.have_crack,
+            cols = original.cols,
+            rows = original.rows,
+            shape = new int[original.rows][]
+        };
+
+        for (int i = 0; i < original.rows; i++)
+        {
+            copy.shape[i] = new int[original.cols];
+            for (int j = 0; j < original.cols; j++)
+            {
+                copy.shape[i][j] = original.shape[i][j];
+            }
+        }
+
+        return copy;
+    }
+
     // Provides a new row based on the current state and pattern usage
     public int[] GetNewRow()
     {
@@ -174,7 +197,7 @@ public class RowGenManager : MonoBehaviour
             {
                 using_patterns = true;
                 // select a new pattern for the next time
-                lastUsedPattern.pattern = patternArray.patterns[Random.Range(0, patternArray.patterns.Length)];
+                lastUsedPattern.pattern = DeepCopyPattern(patternArray.patterns[Random.Range(0, patternArray.patterns.Length)]);
                 lastUsedPattern.lastUsedRow = 0;
             }
         }
